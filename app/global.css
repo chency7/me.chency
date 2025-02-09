@@ -1,3 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  .text-edge-outline {
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+  }
+}
+
+body {
+  font-family: var(--font-wenkai), var(--font-Pacifico), sans-serif;
+}
+
 /* 自定义音频播放器样式 */
 .rhap_container {
   padding: 0.5rem !important;

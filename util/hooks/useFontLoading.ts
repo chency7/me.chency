@@ -2,68 +2,70 @@ import { useState, useEffect } from "react";
 import FontFaceObserver from "fontfaceobserver";
 import { setTimeout } from "timers";
 
+const FONTS = [
+  { name: "Pacifico", weight: 400 },
+  { name: "Inter", weight: 400 },
+  { name: "LXGW WenKai", weight: 400 },
+  { name: "Cal Sans", weight: 400 },
+] as const;
+
+const TIMEOUT = 10000;
+const ONE_DAY = 24 * 60 * 60 * 1000;
+const RETRY_DELAY = 1000;
+const MAX_RETRIES = 3;
+
 export function useFontLoading() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 检查 localStorage 中是否有字体加载记录
-    const fontLoadedBefore = localStorage.getItem("fontLoaded");
-    const lastLoadTime = localStorage.getItem("fontLoadTime");
-    const ONE_DAY = 24 * 60 * 60 * 1000; // 一天的毫秒数
+    const checkCachedFonts = () => {
+      const fontLoadedBefore = localStorage.getItem("fontLoaded");
+      const lastLoadTime = localStorage.getItem("fontLoadTime");
+      return fontLoadedBefore && lastLoadTime && Date.now() - Number(lastLoadTime) < ONE_DAY;
+    };
 
-    // 如果字体已加载且在24小时内，直接返回
-    if (fontLoadedBefore && lastLoadTime && Date.now() - Number(lastLoadTime) < ONE_DAY) {
-      setLoading(false);
-      return;
-    }
+    const loadFont = async (font: (typeof FONTS)[number]) => {
+      const observer = new FontFaceObserver(font.name, { weight: font.weight });
 
-    const loadFonts = async () => {
-      try {
-        const fonts = [
-          { name: "Pacifico", observer: new FontFaceObserver("Pacifico") },
-          { name: "Inter", observer: new FontFaceObserver("Inter") },
-          { name: "LXGW WenKai", observer: new FontFaceObserver("LXGW WenKai") },
-          { name: "Cal Sans", observer: new FontFaceObserver("Cal Sans") },
-        ];
-
-        // 使用 Promise.all 而不是 allSettled，确保所有字体都加载成功
-        await Promise.all(
-          fonts.map(async (font) => {
-            try {
-              await font.observer.load(null, 5000); // 增加超时时间到 5 秒
-              console.log(`Font ${font.name} loaded successfully`);
-            } catch (error) {
-              console.error(`Failed to load font ${font.name}:`, error);
-              throw error; // 重新抛出错误以触发整体的 catch 块
-            }
-          })
-        );
-
-        // 所有字体加载成功后，更新 localStorage
-        localStorage.setItem("fontLoaded", "true");
-        localStorage.setItem("fontLoadTime", Date.now().toString());
-        setTimeout(() => {
-          setLoading(false);
-        }, 1000);
-      } catch (error) {
-        console.error("Font loading error:", error);
-        // 加载失败时，清除之前的记录
-        localStorage.removeItem("fontLoaded");
-        localStorage.removeItem("fontLoadTime");
-        // 仍然设置 loading 为 false，但不缓存结果
-        setTimeout(() => {
-          setLoading(false);
-        }, 1000);
+      for (let i = 0; i < MAX_RETRIES; i++) {
+        try {
+          await observer.load(null, TIMEOUT);
+          console.log(`Font ${font.name} loaded successfully`);
+          return true;
+        } catch (error) {
+          if (i === MAX_RETRIES - 1) {
+            console.warn(`Failed to load font ${font.name}: ${error}`);
+            return false;
+          }
+          console.warn(`Retry ${i + 1} loading font ${font.name}`);
+          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+        }
       }
     };
 
-    loadFonts();
+    const loadAllFonts = async () => {
+      if (checkCachedFonts()) {
+        setLoading(false);
+        return;
+      }
 
-    // 清理函数
-    return () => {
-      // 如果组件卸载时字体还没加载完，不要更新 state
-      setLoading(false);
+      try {
+        const results = await Promise.all(FONTS.map(loadFont));
+        const allLoaded = results.every(Boolean);
+
+        if (allLoaded) {
+          localStorage.setItem("fontLoaded", "true");
+          localStorage.setItem("fontLoadTime", Date.now().toString());
+        }
+      } catch (error) {
+        console.warn(`Font loading error: ${error}`);
+      } finally {
+        setTimeout(() => setLoading(false), RETRY_DELAY);
+      }
     };
+
+    loadAllFonts();
+    return () => setLoading(false);
   }, []);
 
   return loading;

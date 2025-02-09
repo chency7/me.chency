@@ -2,7 +2,7 @@ const defaultTheme = require("tailwindcss/defaultTheme");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./app/**/*.{js,ts,jsx,tsx}", "./mdx-components.tsx", "content/**/*.mdx"],
+  content: ["./app/**/*.{js,ts,jsx,tsx,mdx}", "./components/**/*.{js,ts,jsx,tsx,mdx}"],
 
   theme: {
     extend: {
@@ -29,7 +29,7 @@ module.exports = {
           "var(--font-inter)",
           ...defaultTheme.fontFamily.sans,
           "var(--font-Pacifico)",
-          "var(--font-wenkai)"
+          "var(--font-wenkai)",
           "sans-serif",
         ],
         display: ["var(--font-calsans)"],
@@ -44,6 +44,10 @@ module.exports = {
         title: "title 3s ease-out forwards",
         "fade-left": "fade-left 3s ease-in-out forwards",
         "fade-right": "fade-right 3s ease-in-out forwards",
+        typing: "typing 2s steps(200) forwards",
+        spin: "spin 1s linear infinite",
+        "reverse-spin": "reverse-spin 1.5s linear infinite",
+        "loading-bar": "loading-bar 2s ease-in-out infinite",
       },
       keyframes: {
         "fade-in": {
@@ -103,6 +107,28 @@ module.exports = {
             "line-height": "100%",
             opacity: "100%",
           },
+        },
+        typing: {
+          "0%": {
+            clipPath: "inset(0 100% 0 0)",
+            visibility: "hidden",
+          },
+          "100%": {
+            clipPath: "inset(0 0 0 0)",
+            visibility: "visible",
+          },
+        },
+        "reverse-spin": {
+          from: {
+            transform: "rotate(360deg)",
+          },
+          to: {
+            transform: "rotate(0deg)",
+          },
+        },
+        "loading-bar": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
         },
       },
     },

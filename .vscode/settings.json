@@ -1,5 +1,5 @@
 {
-  "typescript.tsdk": "node_modules/.pnpm/typescript@4.9.5/node_modules/typescript/lib",
+  "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -72,7 +72,7 @@
   },
   "editor.fontSize": 14,
   "editor.lineHeight": 1.5,
-  "editor.fontFamily": "'Fira Code', Consolas, 'Courier New', monospace",
+  "editor.fontFamily": "'Fira Code'",
   "editor.fontLigatures": true,
   "editor.cursorBlinking": "smooth",
   "editor.cursorSmoothCaretAnimation": "on",
@@ -80,6 +80,8 @@
   "editor.minimap.enabled": true,
   "editor.rulers": [100],
   "workbench.iconTheme": "material-icon-theme",
+  "prettier.requireConfig": true,
+  "tailwindCSS.experimental.classRegex": [],
   "css.validate": false,
-  "tailwindcss.validate": true
+  "tailwindCSS.validate": true
 }

@@ -10,7 +10,7 @@ module.exports = {
   ],
   plugins: ["@typescript-eslint", "react", "prettier"],
   rules: {
-    "prettier/prettier": "error",
+    "prettier/prettier": ["error", {}, { usePrettierrc: true }],
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
@@ -23,6 +23,7 @@ module.exports = {
     "@typescript-eslint/no-unsafe-call": "off", // 允许调用 any 类型的函数
     "@typescript-eslint/no-unsafe-member-access": "off", // 允许访问 any 类型的属性
     "react-hooks/exhaustive-deps": "off", // 将 error 改为 warn
+    "tailwindcss/classnames-order": "off", // 关闭 ESLint 的类名排序规则
   },
   settings: {
     next: {

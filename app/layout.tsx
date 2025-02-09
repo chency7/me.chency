@@ -1,4 +1,4 @@
-import "../global.css";
+import "./global.css";
 import { Inter, Pacifico } from "next/font/google";
 import LocalFont from "next/font/local";
 import { Metadata } from "next";
@@ -112,7 +112,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         {/* 分析工具停用 */}
         {/* <Analytics /> */}
       </head>
-      <body className={`bg-black ${debugScreens}`}>
+      <body className={`overflow-hidden bg-black  ${debugScreens}`}>
         <MusicPlayer />
         {/* 暂时隐藏关于按钮 */}
         {/* <Menu /> */}

@@ -1,12 +1,11 @@
 module.exports = {
   semi: true,
-  trailingComma: "es5",
   singleQuote: false,
   tabWidth: 2,
-  useTabs: false,
+  trailingComma: "es5",
   printWidth: 100,
   bracketSpacing: true,
-  endOfLine: "lf",
   plugins: ["prettier-plugin-tailwindcss"],
   tailwindConfig: "./tailwind.config.js",
+  tailwindFunctions: ["clsx", "cn", "twMerge"],
 };

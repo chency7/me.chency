@@ -30,22 +30,27 @@
 ## 🚀 快速开始
 
 1. 克隆仓库
+
 ```bash
 git clone https://github.com/chency7/me.chency.git
 ```
 
 1. 安装依赖
+
 ```bash
 pnpm install
 ```
 
 1. 配置环境变量
+
 ```bash
 cp .env.example .env.local
 ```
+
 然后编辑 `.env.local` 文件，填入必要的环境变量。
 
 1. 启动开发服务器
+
 ```bash
 pnpm dev
 ```

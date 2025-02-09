@@ -5,3 +5,7 @@ dist
 public
 .contentlayer
 pnpm-lock.yaml 
+.vscode
+.eslintrc.js
+.prettierrc.js
+.prettierignore
