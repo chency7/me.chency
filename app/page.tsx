@@ -6,7 +6,7 @@ import { Github } from "lucide-react";
 const navigation = [
   { name: "项目", href: "/views/projects" },
   { name: "博客", href: "/views/contact" },
-  { name: "娱乐", href: "/views/contact" },
+  // { name: "关于", href: "/views/ablut" },
 ];
 
 export default function Home() {
@@ -28,7 +28,7 @@ export default function Home() {
 
       <div className="animate-glow hidden h-px w-screen animate-fade-left bg-gradient-to-r from-zinc-300/0 via-zinc-300/50 to-zinc-300/0 md:block" />
 
-      <h1 className="animate-typing z-10 flex h-[300px] w-fit items-center justify-center overflow-hidden whitespace-nowrap bg-gradient-to-r from-white via-pink-500 to-white bg-clip-text px-16 font-pacifico text-4xl text-transparent sm:text-6xl md:text-9xl">
+      <h1 className="z-10 flex h-[300px] w-fit animate-typing items-center justify-center overflow-hidden whitespace-nowrap bg-gradient-to-r from-white via-pink-500 to-white bg-clip-text px-16 font-pacifico text-4xl text-transparent sm:text-6xl md:text-9xl">
         Chency
       </h1>
 

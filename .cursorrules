@@ -20,6 +20,7 @@
     - 选择最简单的解决方案来满足用户需求。
 
     ### 编写代码时：
+    - 涉及到路径全部采用alias所配置的，确保路径的正确性
     - 使用pnpm而不是npm
     - 加入如hooks等公共方法时请读取一下utils/hooks目录下的文件，确保方法的路径的正确性
     - 使用Next.js 14的App Router而不是Pages Router。

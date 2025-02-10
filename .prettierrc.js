@@ -8,4 +8,16 @@ module.exports = {
   plugins: ["prettier-plugin-tailwindcss"],
   tailwindConfig: "./tailwind.config.js",
   tailwindFunctions: ["clsx", "cn", "twMerge"],
+  tailwindAttributes: ["className"],
+  tailwindClassesOrder: false,
+  overrides: [
+    {
+      files: ["*.ts", "*.tsx"],
+      options: {
+        importOrder: ["^@/(.*)$", "^[./]"],
+        importOrderSeparation: true,
+        importOrderSortSpecifiers: true
+      }
+    }
+  ]
 };

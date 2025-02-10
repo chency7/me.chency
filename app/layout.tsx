@@ -9,6 +9,8 @@ import MusicPlayer from "./components/MusicPlayer";
 // import Menu from "./components/Menu";
 import React from "react";
 // import { Analytics } from "./components/analytics";
+import { AudioProvider } from "./components/AudioProvider";
+import { inter, pacifico, lxgwWenKai, calSans } from "./fonts";
 
 export const metadata: Metadata = {
   // metadataBase: new URL("http://localhost:3000/"),
@@ -53,40 +55,57 @@ export const metadata: Metadata = {
   },
 };
 
+// Google 字体配置
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-  display: "swap",
-  preload: true, // 预加载
-});
-
-const calSans = LocalFont({
-  src: "../public/fonts/CalSans-SemiBold.ttf",
-  variable: "--font-calsans",
-  display: "swap",
+  display: "block",
   preload: true,
-});
-
-const lxgwWenKai = LocalFont({
-  src: "../public/fonts/LXGWWenKai-Regular.ttf",
-  variable: "--font-wenkai",
-  display: "swap",
-  preload: true,
-  fallback: ["system-ui", "sans-serif"], // 添加后备字体
+  fallback: ["system-ui", "sans-serif"],
 });
 
 const pacifico = Pacifico({
-  weight: ["400"], // Pacifico 只有 400 weight
+  weight: ["400"],
   subsets: ["latin"],
-  display: "swap",
+  display: "block",
   variable: "--font-Pacifico",
+  fallback: ["cursive", "system-ui"],
+});
+
+// 本地字体配置
+const calSans = LocalFont({
+  src: [
+    {
+      path: "../public/fonts/CalSans-SemiBold.ttf",
+      weight: "600",
+      style: "normal",
+    },
+  ],
+  variable: "--font-calsans",
+  display: "block",
+  preload: true,
+  fallback: ["system-ui", "sans-serif"],
+});
+
+const lxgwWenKai = LocalFont({
+  src: [
+    {
+      path: "../public/fonts/LXGWWenKai-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+  ],
+  variable: "--font-wenkai",
+  display: "block",
+  preload: true,
+  fallback: ["system-ui", "Microsoft YaHei", "sans-serif"],
 });
 
 // 添加字体预加载链接
 export const fontLinks = [
   {
     rel: "preload",
-    href: "/fonts/LXGWWenKai-Regular.ttf",
+    href: "./static/media/fonts/LXGWWenKai-Regular.ttf",
     as: "font",
     type: "font/ttf",
     crossOrigin: "anonymous",
@@ -112,13 +131,15 @@ export default function RootLayout({ children }: RootLayoutProps) {
         {/* 分析工具停用 */}
         {/* <Analytics /> */}
       </head>
-      <body className={`overflow-hidden bg-black  ${debugScreens}`}>
+      <body className={`overflow-hidden bg-black ${debugScreens}`}>
         <MusicPlayer />
         {/* 暂时隐藏关于按钮 */}
         {/* <Menu /> */}
-        <RouteMiddleware>
-          <React.Suspense fallback={<Loading />}>{children}</React.Suspense>
-        </RouteMiddleware>
+        <AudioProvider>
+          <RouteMiddleware>
+            <React.Suspense fallback={<Loading />}>{children}</React.Suspense>
+          </RouteMiddleware>
+        </AudioProvider>
       </body>
     </html>
   );

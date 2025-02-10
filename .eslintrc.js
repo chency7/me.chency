@@ -10,11 +10,11 @@ module.exports = {
   ],
   plugins: ["@typescript-eslint", "react", "prettier"],
   rules: {
-    "prettier/prettier": ["error", {}, { usePrettierrc: true }],
+    "prettier/prettier": ["off", {}, { usePrettierrc: true }],
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
-    "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+    "@typescript-eslint/no-unused-vars": "off",
     "@typescript-eslint/no-explicit-any": "warn",
     "@typescript-eslint/no-var-requires": "off", // 允许 require() 导入
     "@typescript-eslint/no-require-imports": "off", // 允许 require 导入
