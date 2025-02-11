@@ -5,7 +5,7 @@ import { Github } from "lucide-react";
 
 const navigation = [
   { name: "项目", href: "/views/projects" },
-  { name: "博客", href: "/views/contact" },
+  // { name: "博客", href: "/views/contact" },
   // { name: "关于", href: "/views/ablut" },
 ];
 

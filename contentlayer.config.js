@@ -2,7 +2,12 @@ import { defineDocumentType, makeSource } from "contentlayer/source-files";
 import remarkGfm from "remark-gfm";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
-import rehypeAutolinkHeadings from "rehype-autolink-headings";
+// import rehypeAutolinkHeadings from "rehype-autolink-headings";
+// 超链接配置
+import rehypeExternalLinks from "rehype-external-links";
+// 代码块复制
+import rehypeCodeTitles from "rehype-code-titles";
+import rehypePrismPlus from "rehype-prism-plus";
 
 /** @type {import('contentlayer/source-files').ComputedFields} */
 const computedFields = {
@@ -76,6 +81,17 @@ export default makeSource({
           grid: false,
         },
       ],
+      // 超链
+      [
+        rehypeExternalLinks,
+        {
+          target: "_blank",
+          rel: ["noopener", "noreferrer"],
+        },
+      ],
+      // 复制
+      rehypeCodeTitles,
+      [rehypePrismPlus, { showLineNumbers: true }],
     ],
     cacheDirectory: "./.cache/contentlayer",
   },
