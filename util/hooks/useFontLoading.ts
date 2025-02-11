@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import FontFaceObserver from "fontfaceobserver";
-import { setTimeout } from "timers";
 
 const FONTS = [
   { name: "Pacifico", weight: 400 },
@@ -9,63 +7,81 @@ const FONTS = [
   { name: "Cal Sans", weight: 400 },
 ] as const;
 
-const TIMEOUT = 10000;
-const ONE_DAY = 24 * 60 * 60 * 1000;
-const RETRY_DELAY = 1000;
-const MAX_RETRIES = 3;
+const CACHE_KEY = "fontLoaded";
+const CACHE_TIME_KEY = "fontLoadTime";
+const ONE_DAY = 24 * 60 * 60 * 1000; // 缓存有效期为 1 天
 
 export function useFontLoading() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true; // 防止组件卸载后继续更新状态
+
     const checkCachedFonts = () => {
-      const fontLoadedBefore = localStorage.getItem("fontLoaded");
-      const lastLoadTime = localStorage.getItem("fontLoadTime");
-      return fontLoadedBefore && lastLoadTime && Date.now() - Number(lastLoadTime) < ONE_DAY;
-    };
+      try {
+        const fontLoadedBefore = localStorage.getItem(CACHE_KEY);
+        const lastLoadTime = localStorage.getItem(CACHE_TIME_KEY);
 
-    const loadFont = async (font: (typeof FONTS)[number]) => {
-      const observer = new FontFaceObserver(font.name, { weight: font.weight });
-
-      for (let i = 0; i < MAX_RETRIES; i++) {
-        try {
-          await observer.load(null, TIMEOUT);
-          console.log(`Font ${font.name} loaded successfully`);
-          return true;
-        } catch (error) {
-          if (i === MAX_RETRIES - 1) {
-            console.warn(`Failed to load font ${font.name}: ${error}`);
-            return false;
-          }
-          console.warn(`Retry ${i + 1} loading font ${font.name}`);
-          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+        if (fontLoadedBefore === "true" && lastLoadTime) {
+          const timeDiff = Date.now() - Number(lastLoadTime);
+          return timeDiff < ONE_DAY; // 如果缓存未过期，返回 true
         }
+        return false;
+      } catch (error) {
+        console.warn("Error accessing localStorage:", error);
+        return false;
       }
     };
 
-    const loadAllFonts = async () => {
-      if (checkCachedFonts()) {
-        setLoading(false);
-        return;
-      }
+    const checkFontsLoaded = () => {
+      if (!isMounted) return;
 
       try {
-        const results = await Promise.all(FONTS.map(loadFont));
-        const allLoaded = results.every(Boolean);
+        // 使用 document.fonts.check() 检测每个字体是否加载完成
+        const results = FONTS.map((font) => {
+          const fontString = `${font.weight} 12px ${font.name}`; // 构造字体字符串
+          return document.fonts.check(fontString); // 检查字体是否可用
+        });
+
+        const allLoaded = results.every(Boolean); // 检查所有字体是否都加载完成
 
         if (allLoaded) {
-          localStorage.setItem("fontLoaded", "true");
-          localStorage.setItem("fontLoadTime", Date.now().toString());
+          console.log("All fonts are loaded successfully.");
+          // 缓存字体加载状态
+          try {
+            localStorage.setItem(CACHE_KEY, "true");
+            localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
+          } catch (error) {
+            console.warn("Error saving to localStorage:", error);
+          }
+        } else {
+          console.warn("Some fonts failed to load.");
         }
+
+        setLoading(!allLoaded); // 更新 loading 状态
       } catch (error) {
-        console.warn(`Font loading error: ${error}`);
-      } finally {
-        setTimeout(() => setLoading(false), RETRY_DELAY);
+        console.warn(`Error checking font loading status: ${error}`);
+        setLoading(false); // 如果发生错误，假设字体未加载完成
       }
     };
 
-    loadAllFonts();
-    return () => setLoading(false);
+    // 检查缓存
+    const cached = checkCachedFonts();
+    if (cached) {
+      console.log("Fonts are already loaded (from cache).");
+      setLoading(false);
+    } else {
+      // 监听字体加载事件
+      document.fonts.ready.then(() => {
+        if (isMounted) {
+          checkFontsLoaded();
+        }
+      });
+    }
+
+    return () => {
+      isMounted = false; // 防止组件卸载后继续更新状态
+    };
   }, []);
 
   return loading;

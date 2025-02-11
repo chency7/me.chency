@@ -10,7 +10,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initAudio = () => {
       if (!audioContext) {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        const ctx = new AudioContextClass();
         setAudioContext(ctx);
       }
     };

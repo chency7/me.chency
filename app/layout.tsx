@@ -55,52 +55,6 @@ export const metadata: Metadata = {
   },
 };
 
-// Google 字体配置
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "block",
-  preload: true,
-  fallback: ["system-ui", "sans-serif"],
-});
-
-const pacifico = Pacifico({
-  weight: ["400"],
-  subsets: ["latin"],
-  display: "block",
-  variable: "--font-Pacifico",
-  fallback: ["cursive", "system-ui"],
-});
-
-// 本地字体配置
-const calSans = LocalFont({
-  src: [
-    {
-      path: "../public/fonts/CalSans-SemiBold.ttf",
-      weight: "600",
-      style: "normal",
-    },
-  ],
-  variable: "--font-calsans",
-  display: "block",
-  preload: true,
-  fallback: ["system-ui", "sans-serif"],
-});
-
-const lxgwWenKai = LocalFont({
-  src: [
-    {
-      path: "../public/fonts/LXGWWenKai-Regular.ttf",
-      weight: "400",
-      style: "normal",
-    },
-  ],
-  variable: "--font-wenkai",
-  display: "block",
-  preload: true,
-  fallback: ["system-ui", "Microsoft YaHei", "sans-serif"],
-});
-
 // 添加字体预加载链接
 export const fontLinks = [
   {
@@ -131,7 +85,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         {/* 分析工具停用 */}
         {/* <Analytics /> */}
       </head>
-      <body className={`overflow-hidden bg-black ${debugScreens}`}>
+      <body className={`bg-black ${debugScreens}`}>
         <MusicPlayer />
         {/* 暂时隐藏关于按钮 */}
         {/* <Menu /> */}

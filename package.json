@@ -7,7 +7,7 @@
     "build": "next build",
     "build:standalone": "next build && npm run copy-assets",
     "copy-assets": "node scripts/copy-assets.js",
-    "start": "next start",
+    "start": "next start -p 3005",
     "start:standalone": "cross-env NODE_ENV=production node .next/standalone/server.js",
     "lint": "next lint",
     "test": "jest",

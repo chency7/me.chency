@@ -9,16 +9,28 @@ import { throttle } from "lodash";
 
 export default function MusicPlayer() {
   const [musicList, setMusicList] = useState<MusicInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(false); // 加载状态
+  const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
+  const [volume, setVolume] = useState(0.1);
+  const [isVolumeVisible, setIsVolumeVisible] = useState(false);
 
-  const { isPlaying, isMuted, toggle, next, previous, songName, currentMusic } = useAudioPlayer({
+  const {
+    isPlaying,
+    isMuted,
+    toggle,
+    next,
+    previous,
+    songName,
+    currentMusic,
+    setVolume: setAudioVolume,
+  } = useAudioPlayer({
     musicList,
     autoPlay: false,
     loop: true,
+    initialVolume: volume,
   });
 
   useEffect(() => {
@@ -33,40 +45,30 @@ export default function MusicPlayer() {
 
   useEffect(() => {
     if (currentMusic) {
-      setIsLoading(true); // 开始加载音频
-
-      // 初始化音频对象
+      setIsLoading(true);
       if (!audioRef.current) {
         audioRef.current = new Audio();
-        audioRef.current.preload = "metadata"; // 预加载元数据
+        audioRef.current.preload = "metadata";
       }
-
       const audio = audioRef.current;
 
-      // 初始化 Web Audio API
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || window.AudioContext)();
         gainNodeRef.current = audioContextRef.current.createGain();
-        gainNodeRef.current.gain.value = 0.7; // 设置初始音量
+        gainNodeRef.current.gain.value = volume;
       }
 
       const audioContext = audioContextRef.current;
-
-      // 更新音频路径
       audio.src = currentMusic.path;
+      audio.volume = volume;
 
-      // 懒加载音频文件
-      audio.load(); // 强制重新加载音频文件
-      audio.oncanplaythrough = () => {
-        setIsLoading(false); // 音频加载完成
-      };
+      audio.load();
+      audio.oncanplaythrough = () => setIsLoading(false);
 
-      // 如果音频上下文处于暂停状态，则恢复
       if (audioContext.state === "suspended") {
         audioContext.resume();
       }
 
-      // 创建音频源（仅在首次或切换歌曲时创建）
       if (!sourceRef.current) {
         sourceRef.current = audioContext.createMediaElementSource(audio);
         if (gainNodeRef.current) {
@@ -74,18 +76,13 @@ export default function MusicPlayer() {
         }
       }
 
-      // 错误处理
       audio.onerror = () => {
         setIsLoading(false);
         console.error("音频加载失败");
         alert(`无法加载音频：${currentMusic.name}`);
       };
 
-      // 减少不必要的重渲染
-      const handleTimeUpdate = throttle(() => {
-        // 更新进度逻辑（如果有需要）
-      }, 1000);
-
+      const handleTimeUpdate = throttle(() => {}, 1000);
       audio.addEventListener("timeupdate", handleTimeUpdate);
 
       return () => {
@@ -97,36 +94,74 @@ export default function MusicPlayer() {
 
   useEffect(() => {
     return () => {
-      // 清理所有音频资源
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current.src = ""; // 清空音频路径
+        audioRef.current.src = "";
         audioRef.current = null;
       }
       if (audioContextRef.current) {
-        audioContextRef.current.close().catch(console.error); // 关闭音频上下文
+        audioContextRef.current.close().catch(console.error);
         audioContextRef.current = null;
       }
       if (sourceRef.current) {
-        sourceRef.current.disconnect(); // 断开音频源
+        sourceRef.current.disconnect();
         sourceRef.current = null;
       }
       if (gainNodeRef.current) {
-        gainNodeRef.current.disconnect(); // 断开增益节点
+        gainNodeRef.current.disconnect();
         gainNodeRef.current = null;
       }
     };
   }, []);
 
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    setAudioVolume(newVolume);
+  };
+
   return (
     <>
-      <button
-        onClick={toggle}
-        className="fixed right-4 top-4 z-50 rounded-full p-3 text-zinc-400 transition-all hover:bg-zinc-900 hover:text-zinc-100"
-        aria-label={isMuted ? "Unmute" : "Mute"}
-      >
-        {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-      </button>
+      <div className="fixed right-4 top-4 z-50 flex flex-col items-center gap-2">
+        <button
+          onClick={toggle}
+          className="relative rounded-full p-3 text-zinc-400 transition-all hover:bg-zinc-900 hover:text-zinc-100"
+          aria-label={isMuted ? "Unmute" : "Mute"}
+          onMouseEnter={() => setIsVolumeVisible(true)}
+          onMouseLeave={() => setIsVolumeVisible(false)}
+        >
+          {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          <AnimatePresence>
+            {isVolumeVisible && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="volume-slider-container flex w-10 flex-col items-center justify-center rounded-full py-2"
+              >
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={volume}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={handleVolumeChange}
+                  onMouseDown={(e) => e.stopPropagation()} // 阻止鼠标按下事件冒泡
+                  className="h-20 w-28 -rotate-90 appearance-none bg-transparent"
+                  style={{
+                    WebkitAppearance: "none",
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    transform: "translateX(-50%) translateY(-50%) rotate(-90deg)",
+                  }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </button>
+      </div>
       <AnimatePresence>
         {isPlaying && (
           <motion.div
@@ -141,12 +176,11 @@ export default function MusicPlayer() {
             >
               <ChevronLeft size={16} />
             </button>
-            {/* 声波动画 */}
             <div className="mr-[16px] flex h-4 items-end gap-[2px]">
               {[...Array(5)].map((_, i) => (
                 <motion.div
                   key={i}
-                  className="h-full w-[2px] bg-pink-400 will-change-transform" // 提升动画性能
+                  className="h-full w-[2px] bg-pink-400 will-change-transform"
                   animate={{
                     height: ["40%", "90%", "40%"],
                   }}
@@ -158,9 +192,7 @@ export default function MusicPlayer() {
                 />
               ))}
             </div>
-            {/* 歌曲名字 */}
             <div className="w-16 whitespace-nowrap">
-              {/* 加载状态 */}
               {isLoading ? (
                 <div className="ml-2 text-xs text-zinc-400">加载中...</div>
               ) : (

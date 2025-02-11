@@ -9,9 +9,9 @@ export function Article({ project }: { project: Project }) {
           <span className="drop-shadow-orange text-xs text-zinc-200 duration-1000 group-hover:border-zinc-200 group-hover:text-white">
             {project.date ? (
               <time dateTime={new Date(project.date).toISOString()}>
-                {Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
+                {`${Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
                   new Date(project.date)
-                )}
+                )}---day`}
               </time>
             ) : (
               <span>SOON</span>
