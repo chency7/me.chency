@@ -59,10 +59,7 @@ export const Header: React.FC<Props> = ({ project, views }) => {
                   ? "text-zinc-400 hover:text-zinc-100"
                   : "text-zinc-600 hover:text-zinc-900"
               } `}
-            >
-              <Eye className="h-5 w-5" />{" "}
-              {Intl.NumberFormat("en-US", { notation: "compact" }).format(views)}
-            </span>
+            ></span>
             <Link target="_blank" href="https://github.com/chency7">
               <Github
                 className={`h-6 w-6 duration-200 hover:font-medium ${
@@ -75,7 +72,7 @@ export const Header: React.FC<Props> = ({ project, views }) => {
           </div>
 
           <Link
-            href="/projects"
+            href="/views/projects"
             className={`duration-200 hover:font-medium ${
               isIntersecting
                 ? "text-zinc-400 hover:text-zinc-100"

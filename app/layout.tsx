@@ -15,8 +15,8 @@ import { inter, pacifico, lxgwWenKai, calSans } from "./fonts";
 export const metadata: Metadata = {
   // metadataBase: new URL("http://localhost:3000/"),
   title: {
-    default: "Chency.com",
-    template: "%s | chency.com",
+    default: "Chency.me",
+    template: "%s | chency.me",
   },
   description: "Software engineer and web developer",
   // 交媒体分享

@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export function Article({ project }: { project: Project }) {
   return (
-    <Link href={`/projects/${project.slug}`}>
+    <Link href={`/views/projects/${project.slug}`}>
       <article className="p-4 md:p-8">
         <div className="flex items-center justify-between gap-2">
           <span className="drop-shadow-orange text-xs text-zinc-200 duration-1000 group-hover:border-zinc-200 group-hover:text-white">

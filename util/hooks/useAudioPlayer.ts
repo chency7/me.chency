@@ -25,7 +25,7 @@ interface UseAudioPlayerReturn {
 
 export function useAudioPlayer({
   musicList,
-  autoPlay = false,
+  autoPlay = true,
   loop = true,
   initialVolume = 0.1,
 }: UseAudioPlayerProps): UseAudioPlayerReturn {

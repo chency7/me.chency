@@ -1,4 +1,7 @@
 /** @type {import('next').NextConfig} */
+// next.config.js
+const { withContentlayer } = require("next-contentlayer");
+
 const path = require("path");
 
 const nextConfig = {
@@ -44,4 +47,4 @@ const nextConfig = {
   assetPrefix: process.env.NODE_ENV === "production" ? "" : undefined,
 };
 
-module.exports = nextConfig;
+module.exports = withContentlayer(nextConfig);
