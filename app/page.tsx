@@ -1,10 +1,11 @@
 import Link from "next/link";
 import React from "react";
 import Particles from "./components/particles";
+import Quote from "./components/Quote";
 import { Github } from "lucide-react";
 
 const navigation = [
-  { name: "项目", href: "/views/projects" },
+  { name: "随记", href: "/views/projects" },
   // { name: "博客", href: "/views/contact" },
   // { name: "关于", href: "/views/ablut" },
 ];
@@ -48,6 +49,9 @@ export default function Home() {
           </Link>
         </h2>
       </div>
+
+      {/* 使用 Quote 组件 */}
+      <Quote interval={8000} />
     </div>
   );
 }
