@@ -51,7 +51,7 @@ export default function Home() {
       </div>
 
       {/* 使用 Quote 组件 */}
-      <Quote interval={8000} />
+      <Quote interval={15000} />
     </div>
   );
 }
