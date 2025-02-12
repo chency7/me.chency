@@ -16,23 +16,34 @@ const vertexShader = `
   uniform vec2 resolution;
   uniform vec2 mousePos;
   uniform float dpr;
+  uniform float time;
   
   varying float vAlpha;
+  varying float vGlow;
   
   void main() {
     vec2 pos = position;
     vec2 mouse = mousePos;
     vec2 normPos = pos;
     
+    // 计算到鼠标的距离和力
     float dist = distance(normPos, mouse) / dpr;
-    float force = max(0.0, 1.0 - dist * 0.01);
-    force = force * force;
+    float force = max(0.0, 1.0 - dist * 0.002);
+    force = force * force * (3.0 - 2.0 * force); // 平滑过渡
     
+    // 计算光晕效果
+    float glow = smoothstep(200.0, 0.0, dist);
+    vGlow = glow * 0.5;
+    
+    // 应用力的影响
     vec2 dir = normalize(mouse - normPos);
     pos += dir * force * 50.0 * dpr;
     
+    // 位置转换
     vec2 clipSpace = (pos / resolution) * 2.0 - 1.0;
     gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+    
+    // 粒子大小和透明度
     gl_PointSize = size * dpr * (1.0 + force * 0.5);
     vAlpha = alpha * (1.0 - force * 0.3);
   }
@@ -40,14 +51,23 @@ const vertexShader = `
 
 // 片段着色器
 const fragmentShader = `
-  precision mediump float;
+  precision highp float;
   varying float vAlpha;
+  varying float vGlow;
   
   void main() {
     vec2 center = gl_PointCoord - vec2(0.5);
     float dist = length(center);
+    
+    // 基础粒子
     float alpha = smoothstep(0.5, 0.4, dist) * vAlpha;
-    gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
+    
+    // 光晕效果
+    float glow = exp(-dist * 3.0) * vGlow;
+    vec3 color = vec3(1.0);
+    color += glow * vec3(0.8, 0.9, 1.0);
+    
+    gl_FragColor = vec4(color, alpha + glow);
   }
 `;
 
