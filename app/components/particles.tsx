@@ -5,188 +5,330 @@ import { useMousePosition } from "@/util/mouse";
 interface ParticlesProps {
   className?: string;
   quantity?: number;
-  staticity?: number;
-  ease?: number;
-  refresh?: boolean;
 }
 
-export default function Particles({
-  className = "",
-  quantity = 30,
-  staticity = 50,
-  ease = 50,
-  refresh = false,
-}: ParticlesProps) {
+// 顶点着色器
+const vertexShader = `
+  attribute vec2 position;
+  attribute float size;
+  attribute float alpha;
+  
+  uniform vec2 resolution;
+  uniform vec2 mousePos;
+  uniform float dpr;
+  
+  varying float vAlpha;
+  
+  void main() {
+    vec2 pos = position;
+    vec2 mouse = mousePos;
+    vec2 normPos = pos;
+    
+    float dist = distance(normPos, mouse) / dpr;
+    float force = max(0.0, 1.0 - dist * 0.01);
+    force = force * force;
+    
+    vec2 dir = normalize(mouse - normPos);
+    pos += dir * force * 50.0 * dpr;
+    
+    vec2 clipSpace = (pos / resolution) * 2.0 - 1.0;
+    gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+    gl_PointSize = size * dpr * (1.0 + force * 0.5);
+    vAlpha = alpha * (1.0 - force * 0.3);
+  }
+`;
+
+// 片段着色器
+const fragmentShader = `
+  precision mediump float;
+  varying float vAlpha;
+  
+  void main() {
+    vec2 center = gl_PointCoord - vec2(0.5);
+    float dist = length(center);
+    float alpha = smoothstep(0.5, 0.4, dist) * vAlpha;
+    gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
+  }
+`;
+
+export default function Particles({ className = "", quantity = 500 }: ParticlesProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const canvasContainerRef = useRef<HTMLDivElement>(null);
-  const context = useRef<CanvasRenderingContext2D | null>(null);
-  const circles = useRef<any[]>([]);
   const mousePosition = useMousePosition();
-  const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
-  const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1;
-  const workerRef = useRef<Worker | null>(null);
+  const mouse = useRef({ x: 0, y: 0 });
+  const particlesData = useRef<{
+    positions: Float32Array;
+    sizes: Float32Array;
+    alphas: Float32Array;
+    velocities: Float32Array;
+  }>();
+  const glRef = useRef<WebGLRenderingContext>();
+  const programRef = useRef<WebGLProgram>();
   const animationFrameId = useRef<number>();
 
-  useEffect(() => {
-    // 创建 Worker
-    workerRef.current = new Worker(new URL("@/util/workers/particleWorker.ts", import.meta.url));
+  // 初始化 WebGL
+  const initGL = () => {
+    if (!canvasRef.current) return;
 
-    // 监听 Worker 消息
-    workerRef.current.onmessage = (e) => {
-      if (context.current && canvasRef.current) {
-        clearContext();
-        circles.current = e.data.circles;
-        circles.current.forEach((circle: Circle) => {
-          drawCircle(circle, true);
-        });
+    const canvas = canvasRef.current;
+    const gl = canvas.getContext("webgl", {
+      antialias: true,
+      alpha: true,
+    });
+
+    if (!gl) {
+      console.error("WebGL not supported");
+      return;
+    }
+
+    glRef.current = gl;
+
+    // 创建着色器程序
+    const program = createProgram(gl, vertexShader, fragmentShader);
+    if (!program) return;
+    programRef.current = program;
+    gl.useProgram(program);
+
+    // 初始化粒子数据
+    initParticles();
+    setupBuffers(gl, program);
+  };
+
+  // 创建着色器程序
+  const createProgram = (
+    gl: WebGLRenderingContext,
+    vertexSource: string,
+    fragmentSource: string
+  ) => {
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+    if (!vertexShader || !fragmentShader) return null;
+
+    const program = gl.createProgram();
+    if (!program) return null;
+
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error("Unable to initialize shader program:", gl.getProgramInfoLog(program));
+      return null;
+    }
+
+    return program;
+  };
+
+  // 创建着色器
+  const createShader = (gl: WebGLRenderingContext, type: number, source: string) => {
+    const shader = gl.createShader(type);
+    if (!shader) return null;
+
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.error("Shader compile error:", gl.getShaderInfoLog(shader));
+      gl.deleteShader(shader);
+      return null;
+    }
+
+    return shader;
+  };
+
+  // 初始化粒子数据
+  const initParticles = () => {
+    if (!canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const width = canvas.width;
+    const height = canvas.height;
+
+    const positions = new Float32Array(quantity * 2);
+    const sizes = new Float32Array(quantity);
+    const alphas = new Float32Array(quantity);
+    const velocities = new Float32Array(quantity * 2);
+
+    // 计算网格大小
+    const cols = Math.floor(Math.sqrt(quantity));
+    const rows = Math.ceil(quantity / cols);
+    const cellWidth = width / cols;
+    const cellHeight = height / rows;
+
+    for (let i = 0; i < quantity; i++) {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const i2 = i * 2;
+
+      // 在网格内随机分布，但保持一定的均匀性
+      positions[i2] = (col + 0.2 + Math.random() * 0.6) * cellWidth;
+      positions[i2 + 1] = (row + 0.2 + Math.random() * 0.6) * cellHeight;
+
+      // 随机大小，但保持在合理范围内
+      sizes[i] = Math.random() * 1.5 + 0.5;
+
+      // 随机透明度，但避免过于透明
+      alphas[i] = Math.random() * 0.4 + 0.1;
+
+      // 随机速度，但控制在较小范围内
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 0.1 + 0.05;
+      velocities[i2] = Math.cos(angle) * speed;
+      velocities[i2 + 1] = Math.sin(angle) * speed;
+    }
+
+    particlesData.current = { positions, sizes, alphas, velocities };
+  };
+
+  // 设置缓冲区
+  const setupBuffers = (gl: WebGLRenderingContext, program: WebGLProgram) => {
+    if (!particlesData.current) return;
+    const { positions, sizes, alphas } = particlesData.current;
+
+    // 位置缓冲区
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.DYNAMIC_DRAW);
+    const positionLoc = gl.getAttribLocation(program, "position");
+    gl.enableVertexAttribArray(positionLoc);
+    gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
+
+    // 大小缓冲区
+    const sizeBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, sizeBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, sizes, gl.STATIC_DRAW);
+    const sizeLoc = gl.getAttribLocation(program, "size");
+    gl.enableVertexAttribArray(sizeLoc);
+    gl.vertexAttribPointer(sizeLoc, 1, gl.FLOAT, false, 0, 0);
+
+    // 透明度缓冲区
+    const alphaBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, alphaBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, alphas, gl.STATIC_DRAW);
+    const alphaLoc = gl.getAttribLocation(program, "alpha");
+    gl.enableVertexAttribArray(alphaLoc);
+    gl.vertexAttribPointer(alphaLoc, 1, gl.FLOAT, false, 0, 0);
+  };
+
+  // 更新粒子位置
+  const updateParticles = () => {
+    if (!particlesData.current || !canvasRef.current) return;
+    const { positions, velocities } = particlesData.current;
+    const width = canvasRef.current.width;
+    const height = canvasRef.current.height;
+
+    for (let i = 0; i < quantity; i++) {
+      const i2 = i * 2;
+
+      // 更新位置
+      positions[i2] += velocities[i2];
+      positions[i2 + 1] += velocities[i2 + 1];
+
+      // 边界处理：使用环绕而不是随机重置
+      if (positions[i2] < 0) {
+        positions[i2] = width;
+      } else if (positions[i2] > width) {
+        positions[i2] = 0;
+      }
+
+      if (positions[i2 + 1] < 0) {
+        positions[i2 + 1] = height;
+      } else if (positions[i2 + 1] > height) {
+        positions[i2 + 1] = 0;
+      }
+
+      // 添加轻微的随机运动
+      velocities[i2] += (Math.random() - 0.5) * 0.01;
+      velocities[i2 + 1] += (Math.random() - 0.5) * 0.01;
+
+      // 限制速度范围
+      const speed = Math.sqrt(velocities[i2] ** 2 + velocities[i2 + 1] ** 2);
+      if (speed > 0.2) {
+        velocities[i2] *= 0.2 / speed;
+        velocities[i2 + 1] *= 0.2 / speed;
+      }
+    }
+  };
+
+  // 渲染循环
+  const render = () => {
+    if (!glRef.current || !programRef.current || !canvasRef.current || !particlesData.current)
+      return;
+
+    const gl = glRef.current;
+    const program = programRef.current;
+
+    // 更新粒子位置
+    updateParticles();
+
+    // 更新位置缓冲区
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, particlesData.current.positions, gl.DYNAMIC_DRAW);
+    const positionLoc = gl.getAttribLocation(program, "position");
+    gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
+
+    // 设置 uniform 变量
+    const resolutionLoc = gl.getUniformLocation(program, "resolution");
+    gl.uniform2f(resolutionLoc, canvasRef.current.width, canvasRef.current.height);
+
+    const mousePosLoc = gl.getUniformLocation(program, "mousePos");
+    gl.uniform2f(mousePosLoc, mouse.current.x, mouse.current.y);
+
+    const dprLoc = gl.getUniformLocation(program, "dpr");
+    gl.uniform1f(dprLoc, window.devicePixelRatio || 1);
+
+    // 清除画布并绘制
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.POINTS, 0, quantity);
+
+    animationFrameId.current = requestAnimationFrame(render);
+  };
+
+  // 处理鼠标移动
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+
+    mouse.current = {
+      x: (mousePosition.x - rect.left) * dpr,
+      y: (mousePosition.y - rect.top) * dpr,
+    };
+  }, [mousePosition]);
+
+  // 初始化和清理
+  useEffect(() => {
+    initGL();
+    render();
+
+    const handleResize = () => {
+      if (!canvasRef.current || !glRef.current) return;
+
+      const canvas = canvasRef.current;
+      const gl = glRef.current;
+      const dpr = window.devicePixelRatio || 1;
+
+      const displayWidth = Math.floor(canvas.clientWidth * dpr);
+      const displayHeight = Math.floor(canvas.clientHeight * dpr);
+
+      if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
+        gl.viewport(0, 0, displayWidth, displayHeight);
       }
     };
 
-    if (canvasRef.current) {
-      context.current = canvasRef.current.getContext("2d");
-    }
-    initCanvas();
-    animate();
-    window.addEventListener("resize", initCanvas);
+    handleResize();
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener("resize", initCanvas);
-      workerRef.current?.terminate();
+      window.removeEventListener("resize", handleResize);
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
     };
   }, []);
 
-  useEffect(() => {
-    onMouseMove();
-  }, [mousePosition.x, mousePosition.y]);
-
-  useEffect(() => {
-    initCanvas();
-  }, [refresh]);
-
-  const initCanvas = () => {
-    resizeCanvas();
-    drawParticles();
-  };
-
-  const onMouseMove = () => {
-    if (canvasRef.current) {
-      const rect = canvasRef.current.getBoundingClientRect();
-      const { w, h } = canvasSize.current;
-      const x = mousePosition.x - rect.left - w / 2;
-      const y = mousePosition.y - rect.top - h / 2;
-      const inside = x < w / 2 && x > -w / 2 && y < h / 2 && y > -h / 2;
-      if (inside) {
-        mouse.current.x = x;
-        mouse.current.y = y;
-      }
-    }
-  };
-
-  type Circle = {
-    x: number;
-    y: number;
-    translateX: number;
-    translateY: number;
-    size: number;
-    alpha: number;
-    targetAlpha: number;
-    dx: number;
-    dy: number;
-    magnetism: number;
-  };
-
-  const resizeCanvas = () => {
-    if (canvasContainerRef.current && canvasRef.current && context.current) {
-      circles.current.length = 0;
-      canvasSize.current.w = canvasContainerRef.current.offsetWidth;
-      canvasSize.current.h = canvasContainerRef.current.offsetHeight;
-      canvasRef.current.width = canvasSize.current.w * dpr;
-      canvasRef.current.height = canvasSize.current.h * dpr;
-      canvasRef.current.style.width = `${canvasSize.current.w}px`;
-      canvasRef.current.style.height = `${canvasSize.current.h}px`;
-      context.current.scale(dpr, dpr);
-    }
-  };
-
-  const circleParams = (): Circle => {
-    const x = Math.random() * canvasSize.current.w;
-    const y = Math.random() * canvasSize.current.h;
-    const translateX = 0;
-    const translateY = 0;
-    const size = Math.random() * 2 + 0.1;
-    const alpha = 0;
-    const targetAlpha = Math.random() * 0.6 + 0.1;
-    const dx = (Math.random() - 0.5) * 0.2;
-    const dy = (Math.random() - 0.5) * 0.2;
-    const magnetism = 0.1 + Math.random() * 4;
-    return { x, y, translateX, translateY, size, alpha, targetAlpha, dx, dy, magnetism };
-  };
-
-  const drawCircle = (circle: Circle, update = false) => {
-    if (context.current) {
-      const { x, y, translateX, translateY, size, alpha } = circle;
-      context.current.save();
-      context.current.translate(translateX, translateY);
-      context.current.beginPath();
-      context.current.arc(x, y, size, 0, 2 * Math.PI);
-      context.current.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-      context.current.fill();
-      context.current.restore();
-      if (!update) {
-        circles.current.push(circle);
-      }
-    }
-  };
-
-  const clearContext = () => {
-    if (context.current) {
-      context.current.clearRect(0, 0, canvasSize.current.w, canvasSize.current.h);
-    }
-  };
-
-  const drawParticles = () => {
-    clearContext();
-    const particleCount = quantity;
-    for (let i = 0; i < particleCount; i++) {
-      const circle = circleParams();
-      drawCircle(circle);
-    }
-  };
-
-  // const remapValue = (
-  //   value: number,
-  //   start1: number,
-  //   end1: number,
-  //   start2: number,
-  //   end2: number
-  // ): number => {
-  //   const remapped = ((value - start1) * (end2 - start2)) / (end1 - start1) + start2;
-  //   return remapped > 0 ? remapped : 0;
-  // };
-
-  const animate = () => {
-    if (!context.current || !canvasRef.current) return;
-
-    // 发送数据给 Worker
-    workerRef.current?.postMessage({
-      type: "update",
-      circles: circles.current,
-      mouse: mouse.current,
-      canvasSize: canvasSize.current,
-      staticity,
-      ease,
-    });
-
-    animationFrameId.current = requestAnimationFrame(animate);
-  };
-
-  return (
-    <div className={className} ref={canvasContainerRef} aria-hidden="true">
-      <canvas ref={canvasRef} />
-    </div>
-  );
+  return <canvas ref={canvasRef} className={className} style={{ width: "100%", height: "100%" }} />;
 }
