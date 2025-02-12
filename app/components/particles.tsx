@@ -26,26 +26,26 @@ const vertexShader = `
     vec2 mouse = mousePos;
     vec2 normPos = pos;
     
-    // 计算到鼠标的距离和力
+    // 减小作用范围和力度
     float dist = distance(normPos, mouse) / dpr;
-    float force = max(0.0, 1.0 - dist * 0.002);
-    force = force * force * (3.0 - 2.0 * force); // 平滑过渡
+    float force = max(0.0, 1.0 - dist * 0.005); // 增大系数以减小作用范围
+    force = force * force * (3.0 - 2.0 * force); // 保持平滑过渡
     
-    // 计算光晕效果
-    float glow = smoothstep(200.0, 0.0, dist);
-    vGlow = glow * 0.5;
+    // 减小光晕范围
+    float glow = smoothstep(100.0, 0.0, dist); // 从200降到100
+    vGlow = glow * 0.3; // 降低光晕强度
     
-    // 应用力的影响
+    // 减小力的作用强度
     vec2 dir = normalize(mouse - normPos);
-    pos += dir * force * 50.0 * dpr;
+    pos += dir * force * 30.0 * dpr; // 从50降到30
     
     // 位置转换
     vec2 clipSpace = (pos / resolution) * 2.0 - 1.0;
     gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
     
-    // 粒子大小和透明度
-    gl_PointSize = size * dpr * (1.0 + force * 0.5);
-    vAlpha = alpha * (1.0 - force * 0.3);
+    // 减小粒子大小变化
+    gl_PointSize = size * dpr * (1.0 + force * 0.3); // 从0.5降到0.3
+    vAlpha = alpha * (1.0 - force * 0.2); // 从0.3降到0.2
   }
 `;
 
