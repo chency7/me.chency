@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+// 定义接口类型
 interface HitokotoResponse {
   id: number;
   hitokoto: string;
@@ -15,6 +16,7 @@ interface QuoteProps {
   interval?: number;
 }
 
+// 进度条组件
 const ProgressLine = ({ progress }: { progress: number }) => {
   return (
     <div className="absolute -bottom-px left-1/2 h-px w-3/4 -translate-x-1/2 overflow-hidden">
@@ -28,6 +30,7 @@ const ProgressLine = ({ progress }: { progress: number }) => {
   );
 };
 
+// 本地语录数据
 const localQuotes: HitokotoResponse[] = [
   {
     id: 1,
@@ -66,23 +69,26 @@ const localQuotes: HitokotoResponse[] = [
   },
 ];
 
-export default function Quote({ className = "", interval = 15000 }: QuoteProps) {
-  const [quote, setQuote] = useState<HitokotoResponse | null>(null);
+// 主组件
+export default function Quote({ className = "", interval = 5000 }: QuoteProps) {
+  const [quote, setQuote] = useState<HitokotoResponse | null>(localQuotes[0] || null);
   const [progress, setProgress] = useState(0);
   const [useLocalQuotes, setUseLocalQuotes] = useState(false);
 
+  // 获取随机本地语录
   const getRandomQuote = () => {
+    if (localQuotes.length === 0) return; // 防止空数组
     const randomIndex = Math.floor(Math.random() * localQuotes.length);
     setQuote(localQuotes[randomIndex]);
-    setProgress(0);
+    setProgress(0); // 重置进度条
   };
 
+  // 从 API 获取新语录
   const fetchNewQuote = async () => {
-    setProgress(0);
     try {
       const response = await fetch("/api/proxy");
+      if (!response.ok) throw new Error("Network response was not ok");
       const data: HitokotoResponse = await response.json();
-
       if (data?.hitokoto) {
         setQuote(data);
       } else {
@@ -90,11 +96,12 @@ export default function Quote({ className = "", interval = 15000 }: QuoteProps) 
       }
     } catch (error) {
       console.error("Failed to fetch quote:", error);
-      setUseLocalQuotes(true);
-      getRandomQuote();
+      setUseLocalQuotes(true); // 切换到本地语录
+      getRandomQuote(); // 立即更新语录
     }
   };
 
+  // 更新语录
   const updateQuote = () => {
     if (useLocalQuotes) {
       getRandomQuote();
@@ -103,18 +110,33 @@ export default function Quote({ className = "", interval = 15000 }: QuoteProps) 
     }
   };
 
+  // 初始化和定时器设置
   useEffect(() => {
-    updateQuote(); // 初始加载
-    const timer = setInterval(updateQuote, interval);
+    let timer: NodeJS.Timeout | null = null;
+    let progressTimer: NodeJS.Timeout | null = null;
 
-    const progressStep = 16.67;
-    const progressTimer = setInterval(() => {
-      setProgress((prev) => Math.min(prev + (progressStep / interval) * 100, 100));
-    }, progressStep);
+    const setupTimers = () => {
+      updateQuote(); // 初始加载
 
+      // 清除旧定时器
+      if (timer) clearInterval(timer);
+      if (progressTimer) clearInterval(progressTimer);
+
+      // 设置语录更新定时器
+      timer = setInterval(updateQuote, interval);
+
+      // 设置进度条更新定时器
+      progressTimer = setInterval(() => {
+        setProgress((prev) => (prev >= 100 ? 100 : prev + 100 / (interval / 16.67)));
+      }, 16.67);
+    };
+
+    setupTimers();
+
+    // 清理定时器
     return () => {
-      clearInterval(timer);
-      clearInterval(progressTimer);
+      if (timer) clearInterval(timer);
+      if (progressTimer) clearInterval(progressTimer);
     };
   }, [interval, useLocalQuotes]);
 
@@ -127,9 +149,10 @@ export default function Quote({ className = "", interval = 15000 }: QuoteProps) 
           aria-hidden="true"
         />
 
+        {/* 动画效果 */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={quote?.id}
+            key={quote?.id ?? "empty"} // 确保 key 始终有值
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -20, opacity: 0 }}
@@ -150,6 +173,8 @@ export default function Quote({ className = "", interval = 15000 }: QuoteProps) 
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* 进度条 */}
       <ProgressLine progress={progress} />
     </div>
   );
