@@ -2,78 +2,71 @@
 import { useState, useEffect, useRef } from "react";
 import ThemeDark from "./components/home/theme-dark";
 import ThemeNice from "./components/home/theme-nice";
-
 export default function Home() {
   const [currentTheme, setCurrentTheme] = useState<"dark" | "nice">("dark");
-  const isTransitioning = useRef(false);
-  const scrollAccumulator = useRef(0);
-  const scrollTimeout = useRef<NodeJS.Timeout>();
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const scrollThreshold = 10000;
 
   useEffect(() => {
     const handleScroll = (e: WheelEvent) => {
-      if (isTransitioning.current) return;
+      if (isTransitioning || currentTheme !== "dark") return;
 
-      // 清除之前的超时
-      if (scrollTimeout.current) {
-        clearTimeout(scrollTimeout.current);
-      }
+      setScrollProgress((prev) => {
+        const newProgress = Math.max(0, Math.min(prev + Math.abs(e.deltaY), scrollThreshold));
 
-      // 累积滚动距离
-      scrollAccumulator.current += Math.abs(e.deltaY);
+        if (newProgress >= scrollThreshold) {
+          setIsTransitioning(true);
+          setCurrentTheme("nice");
+          setTimeout(() => {
+            setIsTransitioning(false);
+          }, 5000);
+          return 0;
+        }
 
-      // 设置新的超时，如果 200ms 内没有新的滚动，则重置累积值
-      scrollTimeout.current = setTimeout(() => {
-        scrollAccumulator.current = 0;
-      }, 2000);
-
-      // 检查是否达到阈值
-      if (scrollAccumulator.current >= scrollThreshold && currentTheme === "dark") {
-        isTransitioning.current = true;
-        setCurrentTheme("nice");
-        scrollAccumulator.current = 0;
-        setTimeout(() => {
-          isTransitioning.current = false;
-        }, 1000);
-      }
-
-      // 调试用
-      console.log("Accumulated scroll:", scrollAccumulator.current, "Threshold:", scrollThreshold);
+        return newProgress;
+      });
     };
+
+    const resetTimer = setInterval(() => {
+      setScrollProgress((prev) => {
+        if (prev > 0) {
+          return Math.max(0, prev - scrollThreshold * 0.1);
+        }
+        return prev;
+      });
+    }, 100);
 
     window.addEventListener("wheel", handleScroll, { passive: true });
+
     return () => {
       window.removeEventListener("wheel", handleScroll);
-      if (scrollTimeout.current) {
-        clearTimeout(scrollTimeout.current);
-      }
+      clearInterval(resetTimer);
     };
-  }, [currentTheme]);
+  }, [currentTheme, isTransitioning]);
 
   const handleBack = () => {
-    console.log("handleBack called"); // 调试日志
-    if (currentTheme === "nice") {
-      setCurrentTheme("dark");
-      // 重置滚动累积器
-      scrollAccumulator.current = 0;
-      if (scrollTimeout.current) {
-        clearTimeout(scrollTimeout.current);
-      }
-    }
+    setIsTransitioning(true);
+    setCurrentTheme("dark");
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 1000);
+    setScrollProgress(0);
   };
 
   return (
-    <div className="relative">
+    <div className="relative h-screen w-screen">
       <div
         className={`transition-opacity duration-500 ${
           currentTheme === "dark" ? "opacity-100" : "opacity-0"
         }`}
       >
-        <ThemeDark />
+        <ThemeDark scrollProgress={scrollProgress} scrollThreshold={scrollThreshold} />
       </div>
+
       <div
-        className={`absolute inset-0 transition-opacity duration-500 ${
-          currentTheme === "nice" ? "opacity-100" : "opacity-0"
+        className={`transition-opacity duration-500 ${
+          currentTheme === "dark" ? "opacity-0" : "opacity-100"
         }`}
       >
         <ThemeNice onBack={handleBack} />
