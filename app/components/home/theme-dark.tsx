@@ -1,13 +1,13 @@
 import Link from "next/link";
 import React, { useEffect } from "react";
 import Particles from "../particles";
-import Quote from "../Quote";
 import { Github } from "lucide-react";
 import { motion, useAnimation } from "framer-motion";
 
 interface ThemeDarkProps {
   scrollProgress?: number;
   scrollThreshold?: number;
+  onTitleClick?: () => void;
 }
 
 const navigation = [
@@ -16,7 +16,11 @@ const navigation = [
   // { name: "关于", href: "/views/ablut" },
 ];
 
-export default function ThemeDark({ scrollProgress = 0, scrollThreshold = 10000 }: ThemeDarkProps) {
+export default function ThemeDark({
+  scrollProgress = 0,
+  scrollThreshold = 10000,
+  onTitleClick,
+}: ThemeDarkProps) {
   const controls = useAnimation();
   const fillPercentage = Math.min((scrollProgress / scrollThreshold) * 100, 100);
 
@@ -47,14 +51,18 @@ export default function ThemeDark({ scrollProgress = 0, scrollThreshold = 10000 
 
       <div className="relative">
         {/* 背景文字（灰色） */}
-        <h1 className="z-10 flex h-[300px] w-fit items-center justify-center overflow-hidden whitespace-nowrap bg-gradient-to-r from-zinc-500 to-zinc-500 bg-clip-text px-16 font-pacifico text-4xl text-transparent sm:text-6xl md:text-9xl">
+        <h1
+          onClick={onTitleClick}
+          className="z-10 flex h-[300px] w-fit cursor-pointer select-none items-center justify-center overflow-hidden whitespace-nowrap bg-gradient-to-r from-zinc-500 to-zinc-500 bg-clip-text px-16 font-pacifico text-4xl text-transparent sm:text-6xl md:text-9xl"
+        >
           Chency
         </h1>
         {/* 渐变填充文字 */}
         <motion.h1
+          onClick={onTitleClick}
           animate={controls}
           initial={{ clipPath: "inset(0 100% 0 0)" }}
-          className="absolute inset-0 z-20 flex h-[300px] w-fit items-center justify-center overflow-hidden whitespace-nowrap bg-gradient-to-r from-white via-pink-500 to-white bg-clip-text px-16 font-pacifico text-4xl text-transparent sm:text-6xl md:text-9xl"
+          className="absolute inset-0 z-20 flex h-[300px] w-fit cursor-pointer select-none items-center justify-center overflow-hidden whitespace-nowrap bg-gradient-to-r from-white via-pink-500 to-white bg-clip-text px-16 font-pacifico text-4xl text-transparent sm:text-6xl md:text-9xl"
         >
           Chency
         </motion.h1>
@@ -62,7 +70,7 @@ export default function ThemeDark({ scrollProgress = 0, scrollThreshold = 10000 
 
       <div className="animate-glow hidden h-px w-screen animate-fade-right bg-gradient-to-r from-zinc-300/0 via-zinc-300/50 to-zinc-300/0 md:block" />
 
-      {/* <Particles className="absolute inset-0 -z-10 animate-fade-in" quantity={500} /> */}
+      <Particles className="absolute inset-0 -z-10 animate-fade-in" quantity={500} />
 
       <div className="mt-16 animate-fade-in text-center">
         <h2 className="text-sm text-zinc-500">
@@ -76,8 +84,6 @@ export default function ThemeDark({ scrollProgress = 0, scrollThreshold = 10000 
           </Link>
         </h2>
       </div>
-
-      <Quote interval={50000} />
     </div>
   );
 }
