@@ -31,7 +31,6 @@ export function ScrollingText({ text, className = "" }: ScrollingTextProps) {
       const textWidth = textElement.offsetWidth;
       setDimensions({ containerWidth, textWidth });
 
-      console.log("textWidth", textWidth, "containerWidth", containerWidth);
       setShouldScroll(textWidth > containerWidth);
     };
 

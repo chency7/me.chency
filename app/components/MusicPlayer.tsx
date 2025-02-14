@@ -6,6 +6,7 @@ import { ScrollingText } from "./ScrollingText";
 import { useEffect, useState, useRef } from "react";
 import type { MusicInfo } from "@/util/getMusicList";
 import { throttle } from "lodash";
+import { useMediaQuery } from "react-responsive";
 
 export default function MusicPlayer() {
   const [musicList, setMusicList] = useState<MusicInfo[]>([]);
@@ -16,6 +17,7 @@ export default function MusicPlayer() {
   const gainNodeRef = useRef<GainNode | null>(null);
   const [volume, setVolume] = useState(0.1);
   const [isVolumeVisible, setIsVolumeVisible] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const {
     isPlaying,
@@ -32,6 +34,8 @@ export default function MusicPlayer() {
     loop: true,
     initialVolume: volume,
   });
+
+  const isMobile = useMediaQuery({ query: "(max-width: 768px)" });
 
   useEffect(() => {
     fetch("/api/music")
@@ -114,6 +118,19 @@ export default function MusicPlayer() {
     };
   }, []);
 
+  // 处理点击事件
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      // 如果点击的不是按钮本身或其子元素
+      if (buttonRef.current && !buttonRef.current.contains(e.target as Node)) {
+        setIsVolumeVisible(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
@@ -124,6 +141,7 @@ export default function MusicPlayer() {
     <>
       <div className="fixed right-4 top-4 z-50 flex flex-col items-center gap-2">
         <button
+          ref={buttonRef}
           onClick={toggle}
           className="relative rounded-full p-3 text-zinc-400 transition-all hover:bg-zinc-900 hover:text-zinc-100"
           aria-label={isMuted ? "Unmute" : "Mute"}
@@ -147,7 +165,7 @@ export default function MusicPlayer() {
                   value={volume}
                   onClick={(e) => e.stopPropagation()}
                   onChange={handleVolumeChange}
-                  onMouseDown={(e) => e.stopPropagation()} // 阻止鼠标按下事件冒泡
+                  onMouseDown={(e) => e.stopPropagation()}
                   className="h-20 w-28 -rotate-90 appearance-none bg-transparent"
                   style={{
                     WebkitAppearance: "none",
@@ -168,7 +186,9 @@ export default function MusicPlayer() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-8 right-8 z-50 flex w-60 items-center gap-4 overflow-hidden rounded-full bg-zinc-900/90 px-4 py-2 text-zinc-400 shadow-lg backdrop-blur-sm"
+            className={`fixed z-50 flex items-center gap-4 overflow-hidden rounded-full bg-zinc-900/90 px-4 py-2 text-zinc-400 shadow-lg backdrop-blur-sm ${
+              isMobile ? "bottom-4 left-0 right-0 mx-auto w-[280px]" : "bottom-8 right-8 w-60"
+            }`}
           >
             <button
               onClick={previous}

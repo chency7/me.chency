@@ -169,7 +169,7 @@ export default function ThemeNice({ onBack }: ThemeNiceProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="mt-16 flex w-full justify-start px-4 md:mt-24 md:px-8 lg:px-16"
+          className="mt-4 flex w-full justify-start px-4 md:mt-24 md:px-8 lg:px-16"
         >
           <Timeline />
         </motion.div>
