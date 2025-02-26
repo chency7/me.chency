@@ -2,6 +2,7 @@
 import { ArrowLeft, Eye, Github } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
+import dayjs from "dayjs";
 
 type Props = {
   project: {
@@ -89,7 +90,9 @@ export const Header: React.FC<Props> = ({ project }) => {
               {project.title}
             </h1>
             <p className="mt-6 text-lg leading-8 text-zinc-300">{project.description}</p>
-            <p>时间：{project?.date}</p>
+            <p className="text-sm leading-8 text-zinc-300">
+              时间：{dayjs(project?.date).format("YYYY-MM-DD HH:mm")}
+            </p>
           </div>
 
           <div className="mx-auto mt-10 max-w-2xl lg:mx-0 lg:max-w-none">

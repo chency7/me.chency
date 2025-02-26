@@ -1,0 +1,55 @@
+# Node.js
+
+## 介绍
+
+Node.js 是一个开源的、跨平台的 JavaScript 运行时环境，允许开发者在服务器端运行 JavaScript。它基于 Chrome 的 V8 引擎构建，提供了非阻塞的 I/O 模型，使得 Node.js 特别适合处理高并发的网络应用。
+
+## 背景
+
+Node.js 于 2009 年由 Ryan Dahl 首次发布，旨在解决传统 Web 服务器在处理并发请求时的性能瓶颈。Node.js 的事件驱动架构和异步 I/O 操作使得它能够高效地处理大量的连接，成为构建实时应用（如聊天应用和在线游戏）的理想选择。
+
+## 教程
+
+- [官方文档](https://nodejs.org/en/docs/)
+- [Node.js 入门教程](https://nodejs.dev/learn)
+- [Node.js 深入教程](https://www.freecodecamp.org/news/learn-node-js-with-this-free-ebook/)
+
+## 网站链接
+
+- [Node.js 官网](https://nodejs.org)
+- [Node.js GitHub](https://github.com/nodejs/node)
+
+## 使用示例
+
+以下是一个简单的 Node.js 服务器示例：
+
+```javascript
+const http = require("http");
+
+const hostname = "127.0.0.1";
+const port = 3000;
+
+const server = http.createServer((req, res) => {
+  res.statusCode = 200;
+  res.setHeader("Content-Type", "text/plain");
+  res.end("Hello World\n");
+});
+
+server.listen(port, hostname, () => {
+  console.log(`Server running at http://${hostname}:${port}/`);
+});
+```
+
+在这个示例中，我们创建了一个简单的 HTTP 服务器，当用户访问时返回"Hello World"。
+
+## 最佳实践
+
+1. **使用模块化**：将代码拆分为多个模块，便于管理和维护。
+2. **错误处理**：在异步操作中使用 `try-catch` 或 `.catch()` 方法处理错误，确保应用的稳定性。
+3. **使用中间件**：在 Express.js 等框架中使用中间件来处理请求和响应，增强代码的可读性。
+4. **性能优化**：使用集群模块来充分利用多核 CPU，提高应用的性能。
+5. **安全性**：定期更新依赖项，使用安全的编码实践，防止常见的安全漏洞。
+
+## 结论
+
+Node.js 是一个强大且灵活的工具，适用于构建高性能的网络应用。通过非阻塞的 I/O 模型，开发者可以轻松处理大量的并发请求。无论是初学者还是经验丰富的开发者，Node.js 都是一个值得学习和使用的技术。

@@ -13,7 +13,7 @@ interface ThemeDarkProps {
 const navigation = [
   { name: "随记", href: "/views/projects" },
   // { name: "博客", href: "/views/contact" },
-  // { name: "关于", href: "/views/ablut" },
+  { name: "历程", href: "/views/course" },
 ];
 
 export default function ThemeDark({
@@ -34,7 +34,7 @@ export default function ThemeDark({
   return (
     <div className="fixed inset-0 flex h-screen w-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-tl from-black via-zinc-600/10 to-black">
       <nav className="mb-20 animate-fade-in">
-        <ul className="flex items-center justify-center gap-4">
+        <ul className="flex items-center justify-center gap-8">
           {navigation.map((item) => (
             <Link
               key={item.href}

@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+"use client";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Code, Brush, Music, Coffee, X, Gamepad2 } from "lucide-react";
-import Quote from "../Quote";
-import Timeline from "./modules/timeline";
+import { ArrowLeft, Code, Brush, Coffee, X, Gamepad2, DollarSign, ArrowRight } from "lucide-react";
+import Quote from "@/app/components/Quote";
+import Timeline from "@/app/components/home/modules/timeline";
+import Link from "next/link";
 
 interface ThemeNiceProps {
   onBack?: () => void;
@@ -21,35 +23,24 @@ const cards = [
     },
   },
   {
+    icon: <DollarSign className="h-6 w-6" />,
+    title: "金融",
+    description: "管理财富与投资的艺术",
+    color: "from-zinc-900/80 to-zinc-800/80",
+    details: {
+      title: "金融知识的了解",
+      items: ["量化交易", "海龟交易法", "交易心理学", "资金管理"],
+      bgColor: "from-zinc-900/90 to-zinc-800/90",
+    },
+  },
+  {
     icon: <Gamepad2 className="h-6 w-6" />,
     title: "游戏",
     description: "虚拟世界的冒险",
     color: "from-zinc-800/80 to-zinc-700/80",
     details: {
-      title: "游戏开发",
-      items: ["Unity", "Three.js", "WebGL", "游戏设计", "关卡设计"],
-      bgColor: "from-zinc-800/90 to-zinc-700/90",
-    },
-  },
-  {
-    icon: <Brush className="h-6 w-6" />,
-    title: "设计",
-    description: "追求视觉的美感",
-    color: "from-zinc-900/80 to-zinc-800/80",
-    details: {
-      title: "设计工具",
-      items: ["Figma", "Photoshop", "After Effects", "Blender"],
-      bgColor: "from-zinc-900/90 to-zinc-800/90",
-    },
-  },
-  {
-    icon: <Music className="h-6 w-6" />,
-    title: "音乐",
-    description: "感受旋律的律动",
-    color: "from-zinc-800/80 to-zinc-700/80",
-    details: {
-      title: "音乐领域",
-      items: ["作曲", "编曲", "混音", "乐器演奏"],
+      title: "游戏",
+      items: ["英雄联盟", "骑马与砍杀", "GTA5"],
       bgColor: "from-zinc-800/90 to-zinc-700/90",
     },
   },
@@ -64,15 +55,40 @@ const cards = [
       bgColor: "from-zinc-900/90 to-zinc-800/90",
     },
   },
+  {
+    icon: <Brush className="h-6 w-6" />,
+    title: "数学",
+    description: "探索数学的奥秘",
+    color: "from-zinc-900/80 to-zinc-800/80",
+    details: {
+      title: "数学领域",
+      items: ["代数", "几何", "微积分", "统计学"],
+      bgColor: "from-zinc-900/90 to-zinc-800/90",
+    },
+  },
 ];
 
 export default function ThemeNice({ onBack }: ThemeNiceProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
 
-  const handleCardClick = (index: number) => {
-    setSelectedCard(selectedCard === index ? null : index);
+  const handleCardClick = (item: any) => {
+    // 跳转到对应的MDX页面
+    // window.location.href = `/course/ItemDetail.mdx`;
+    console.log(item);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedCard(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   return (
     <div className="fixed inset-0 flex h-screen w-screen flex-col items-center overflow-y-auto overflow-x-hidden bg-gradient-to-br from-black">
@@ -86,7 +102,9 @@ export default function ThemeNice({ onBack }: ThemeNiceProps) {
           className="flex cursor-pointer items-center gap-2 text-white/50 transition-colors hover:text-white"
         >
           <ArrowLeft className="h-5 w-5 md:h-6 md:w-6" />
-          <span className="text-sm">返回</span>
+          <Link className="text-sm" href="/">
+            返回
+          </Link>
         </motion.button>
       </div>
 
@@ -97,7 +115,7 @@ export default function ThemeNice({ onBack }: ThemeNiceProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="grid w-full max-w-6xl grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 lg:gap-6"
+          className="grid w-full max-w-6xl grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6 xl:grid-cols-5"
         >
           {cards.map((card, index) => (
             <motion.div
@@ -105,9 +123,9 @@ export default function ThemeNice({ onBack }: ThemeNiceProps) {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 * index }}
-              onClick={() => handleCardClick(index)}
               onHoverStart={() => setHoveredIndex(index)}
               onHoverEnd={() => setHoveredIndex(null)}
+              onClick={() => setSelectedCard(index)}
               className={`group relative flex h-36 w-full cursor-pointer flex-col items-center justify-center rounded-xl border border-zinc-800/50 bg-gradient-to-br ${card.color} p-4 backdrop-blur-sm transition-all duration-300 hover:border-zinc-700 sm:h-48 md:p-6`}
             >
               {/* 悬浮时的边框发光效果 */}
@@ -226,9 +244,13 @@ export default function ThemeNice({ onBack }: ThemeNiceProps) {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    className="rounded-lg bg-white/10 p-4 text-sm text-white/80 backdrop-blur-sm md:text-base"
+                    className="flex items-center justify-between rounded-lg bg-white/10 p-4 text-sm text-white/80 backdrop-blur-sm hover:bg-white/20 md:text-base"
+                    onHoverStart={() => setHoveredIndex(i)}
+                    onHoverEnd={() => setHoveredIndex(null)}
+                    onClick={() => handleCardClick(item)}
                   >
-                    {item}
+                    <span>{item}</span>
+                    {hoveredIndex === i && <ArrowRight className="h-4 w-4 text-white/60" />}
                   </motion.div>
                 ))}
               </div>

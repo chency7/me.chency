@@ -22,15 +22,27 @@ export default async function PostPage({ params }: Props) {
   const slug = params?.slug;
   const project = allProjects.find((project) => project.slug === slug);
 
-  console.log(project);
+  const _project = {
+    url: "",
+    title: "",
+    description: "",
+    repository: "",
+    date: "",
+  };
 
   if (!project) {
     notFound();
+  } else {
+    _project.url = project.url || "";
+    _project.title = project.title || "";
+    _project.description = project.description || "";
+    _project.repository = project.repository || "";
+    _project.date = project.date || "";
   }
 
   return (
     <div className="min-h-screen bg-zinc-50">
-      <Header project={project} />
+      <Header project={_project} />
       <article className="prose prose-zinc prose-quoteless mx-auto px-4 py-12">
         <Mdx code={project.body.code} />
       </article>

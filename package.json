@@ -26,6 +26,7 @@
     "@upstash/redis": "^1.23.3",
     "contentlayer": "^0.3.4",
     "date-fns": "^4.1.0",
+    "dayjs": "^1.11.13",
     "fontfaceobserver": "^2.3.0",
     "framer-motion": "^10.16.4",
     "localforage": "^1.10.0",
