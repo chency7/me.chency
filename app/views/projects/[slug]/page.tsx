@@ -4,8 +4,6 @@ import { Mdx } from "@/app/components/mdx";
 import { Header } from "./header";
 import "./mdx.css";
 
-export const revalidate = 60;
-
 type Props = {
   params: {
     slug: string;
@@ -24,6 +22,8 @@ export default async function PostPage({ params }: Props) {
   const slug = params?.slug;
   const project = allProjects.find((project) => project.slug === slug);
 
+  console.log(project);
+
   if (!project) {
     notFound();
   }
@@ -31,7 +31,6 @@ export default async function PostPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-zinc-50">
       <Header project={project} />
-
       <article className="prose prose-zinc prose-quoteless mx-auto px-4 py-12">
         <Mdx code={project.body.code} />
       </article>

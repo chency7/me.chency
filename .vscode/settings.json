@@ -1,4 +1,5 @@
 {
+
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "editor.formatOnSave": true,
@@ -70,9 +71,9 @@
     "tab.activeBackground": "#282C34",
     "tab.inactiveBackground": "#21252B"
   },
-  "editor.fontSize": 14,
   "editor.lineHeight": 1.5,
-  "editor.fontFamily": "'Fira Code'",
+  "editor.fontFamily": "JetBrains Mono, Consolas, 'Courier New', monospace",
+  "editor.fontSize": 14,
   "editor.fontLigatures": true,
   "editor.cursorBlinking": "smooth",
   "editor.cursorSmoothCaretAnimation": "on",

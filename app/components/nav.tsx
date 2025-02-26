@@ -3,7 +3,6 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import PasswordModal from "./PasswordModal";
-// import { useRouter } from "next/navigation";
 
 export const Navigation: React.FC = () => {
   const ref = useRef<HTMLElement>(null);
@@ -35,7 +34,7 @@ export const Navigation: React.FC = () => {
           isIntersecting ? "border-transparent bg-zinc-900/0" : "bg-zinc-900/500 border-zinc-800"
         }`}
       >
-        <div className="container mx-auto flex flex-row items-center justify-between p-6">
+        <div className="container flex flex-row justify-between items-center p-6 mx-auto">
           {/* <div className="flex gap-8 justify-between">
             <Link
               href="/projects"
@@ -49,12 +48,11 @@ export const Navigation: React.FC = () => {
             </Link>
           </div> */}
 
-          <Link href="/" className="text-zinc-300 duration-200 hover:text-zinc-100">
-            <ArrowLeft className="h-6 w-6" />
+          <Link href="/" className="duration-200 text-zinc-300 hover:text-zinc-100">
+            <ArrowLeft className="w-6 h-6" />
           </Link>
         </div>
       </div>
-      <PasswordModal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)} />
     </header>
   );
 };

@@ -7,11 +7,7 @@ import { Card } from "../../components/card";
 import { Article } from "./article";
 import { Presentation } from "lucide-react";
 
-export const revalidate = 60;
-
 export default function ProjectsPage() {
-  console.log("allProjects", allProjects);
-
   const sorted = allProjects.sort((a, b) => {
     if (a.date && b.date) {
       return new Date(b.date).getTime() - new Date(a.date).getTime();

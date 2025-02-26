@@ -9,11 +9,10 @@ type Props = {
     title: string;
     description: string;
     repository?: string;
+    date?: string;
   };
-
-  views: number;
 };
-export const Header: React.FC<Props> = ({ project, views }) => {
+export const Header: React.FC<Props> = ({ project }) => {
   const ref = useRef<HTMLElement>(null);
   const [isIntersecting, setIntersecting] = useState(true);
 
@@ -90,6 +89,7 @@ export const Header: React.FC<Props> = ({ project, views }) => {
               {project.title}
             </h1>
             <p className="mt-6 text-lg leading-8 text-zinc-300">{project.description}</p>
+            <p>时间：{project?.date}</p>
           </div>
 
           <div className="mx-auto mt-10 max-w-2xl lg:mx-0 lg:max-w-none">

@@ -16,7 +16,7 @@ const cards = [
     color: "from-zinc-900/80 to-zinc-800/80",
     details: {
       title: "技术栈",
-      items: ["Next.js", "React", "TypeScript", "Node.js", "WebGL"],
+      items: ["Next.js", "React", "TypeScript", "Node.js", "WebGL", "Vue"],
       bgColor: "from-zinc-900/90 to-zinc-800/90",
     },
   },
